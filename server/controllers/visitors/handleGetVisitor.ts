@@ -12,6 +12,7 @@ export const handleGetVisitor = async (req: Request, res: Response): Promise<Rec
     let isInZone = false;
     const landmarkZonesArray = landmarkZonesString.split(",");
     if (landmarkZonesArray.includes(assetId) || privateZoneId === assetId) isInZone = true;
+    // console.log("Topia Visitor payload:", visitor);
 
     return res.json({ visitor: { isAdmin, isInZone, profileId }, success: true });
   } catch (error) {

@@ -7,18 +7,20 @@ import Error from "@pages/Error";
 
 // context
 import { GlobalDispatchContext } from "./context/GlobalContext";
-import { InteractiveParams, SET_HAS_SETUP_BACKEND, SET_INTERACTIVE_PARAMS } from "./context/types";
+import { InteractiveParams, SET_HAS_SETUP_BACKEND, SET_INTERACTIVE_PARAMS, SET_VISITOR_INFO } from "./context/types";
 
 // utils
-import { setupBackendAPI } from "./utils/backendAPI";
+import { setupBackendAPI, backendAPI } from "./utils/backendAPI";
 
 const App = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [hasInitBackendAPI, setHasInitBackendAPI] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const dispatch = useContext(GlobalDispatchContext);
 
+  // Build interactiveParams from URL parameters
   const interactiveParams: InteractiveParams = useMemo(() => {
     return {
       assetId: searchParams.get("assetId") || "",
@@ -35,19 +37,21 @@ const App = () => {
     };
   }, [searchParams]);
 
+  // Dispatch interactive params to global state
   const setInteractiveParams = useCallback(
-    ({ profileId, sceneDropId }: InteractiveParams) => {
+    (params: InteractiveParams) => {
       dispatch!({
         type: SET_INTERACTIVE_PARAMS,
         payload: {
-          profileId,
-          sceneDropId,
+          profileId: params.profileId,
+          sceneDropId: params.sceneDropId,
         },
       });
     },
     [dispatch],
   );
 
+  // Dispatch that backend setup has completed
   const setHasSetupBackend = useCallback(
     (success: boolean) => {
       dispatch!({
@@ -58,6 +62,7 @@ const App = () => {
     [dispatch],
   );
 
+  // Initialize the backend API
   const setupBackend = () => {
     setupBackendAPI(interactiveParams)
       .then(() => setHasSetupBackend(true))
@@ -65,17 +70,38 @@ const App = () => {
       .finally(() => setHasInitBackendAPI(true));
   };
 
+  // Fetch visitor data from backend and dispatch it into global state
+  const getVisitor = () => {
+    backendAPI
+      .get("/visitor")
+      .then((result) => {
+        dispatch!({
+          type: SET_VISITOR_INFO,
+          payload: result.data.visitor,
+        });
+      })
+      .catch((error) => {
+        console.error("Error fetching visitor:", error?.response?.data?.message);
+        navigate("*");
+      })
+      .finally(() => setIsLoading(false));
+  };
+
   useEffect(() => {
     if (interactiveParams.assetId) {
-      setInteractiveParams({
-        ...interactiveParams,
-      });
+      setInteractiveParams(interactiveParams);
     }
   }, [interactiveParams, setInteractiveParams]);
 
   useEffect(() => {
-    if (!hasInitBackendAPI) setupBackend();
+    if (!hasInitBackendAPI) {
+      setupBackend();
+    } else {
+      getVisitor();
+    }
   }, [hasInitBackendAPI, interactiveParams]);
+
+  if (isLoading || !hasInitBackendAPI) return <div>Loading...</div>;
 
   return (
     <Routes>

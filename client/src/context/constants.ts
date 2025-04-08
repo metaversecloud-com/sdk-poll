@@ -1,8 +1,8 @@
 export const initialState = {
-  error: "",
-  gameState: {},
   hasInteractiveParams: false,
-  hasSetupBackend: false,
-  profileId: "",
-  sceneDropId: "",
+  visitor: {
+    isAdmin: false,
+    isInZone: false,
+    profileId: "",
+  },
 };
