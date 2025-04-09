@@ -6,7 +6,10 @@ import {
   handleRemoveDroppedAssetsByUniqueName,
   handleGetWorldDetails,
   handleUpdateWorldDataObject,
-  handleFireToast,
+  handleUpdatePoll,
+  handleGetUpdatePoll,
+  handleVote,
+  handleResetScene,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -35,6 +38,10 @@ router.get("/system/health", (req, res) => {
 router.post("/dropped-asset", handleDropAsset);
 router.get("/dropped-asset", handleGetDroppedAsset);
 router.post("/remove-dropped-assets", handleRemoveDroppedAssetsByUniqueName);
+router.put("/updatePoll", handleUpdatePoll);
+router.get("/updatePoll", handleGetUpdatePoll);
+router.post("/vote", handleVote);
+router.post("/admin/reset", handleResetScene);
 
 // Visitor
 router.get("/visitor", handleGetVisitor);
@@ -42,6 +49,5 @@ router.get("/visitor", handleGetVisitor);
 // World
 router.get("/world", handleGetWorldDetails);
 router.put("/world/data-object", handleUpdateWorldDataObject);
-router.put("/world/fire-toast", handleFireToast);
 
 export default router;
