@@ -7,6 +7,10 @@ interface ConfirmationModalProps {
   handleToggleShowConfirmationModal: () => void;
 }
 
+/* 
+  New confirmation modal component for displaying confirmation messages including
+  customization props for re-use.
+*/
 export const ConfirmationModal = ({
   title,
   message,

@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { errorHandler, getCredentials, getDroppedAsset, initializeDroppedAssetDataObject } from "../utils/index.js";
 
-
+/*
+  This function handles the GET request to retrieve the poll settings from a dropped asset.
+  It fetches the poll data from the dropped asset's data object and returns it in the response.
+*/
 export const handleGetUpdatePoll = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);

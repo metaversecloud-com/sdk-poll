@@ -38,9 +38,17 @@ router.get("/system/health", (req, res) => {
 router.post("/dropped-asset", handleDropAsset);
 router.get("/dropped-asset", handleGetDroppedAsset);
 router.post("/remove-dropped-assets", handleRemoveDroppedAssetsByUniqueName);
+
+// New Route for creating data object for newly dropped poll
 router.put("/updatePoll", handleUpdatePoll);
+
+// New Route for getting the data for existing poll
 router.get("/updatePoll", handleGetUpdatePoll);
+
+// New route for updating the poll w/ new vote
 router.post("/vote", handleVote);
+
+// New route for resetting the poll / entire droppedAssets data object
 router.post("/admin/reset", handleResetScene);
 
 // Visitor

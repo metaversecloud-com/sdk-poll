@@ -4,6 +4,7 @@ import { Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
 // pages
 import Home from "@pages/Home";
 import Error from "@pages/Error";
+import { Loading } from "@components/Loading";
 
 // context
 import { GlobalDispatchContext } from "./context/GlobalContext";
@@ -101,7 +102,9 @@ const App = () => {
     }
   }, [hasInitBackendAPI, interactiveParams]);
 
-  if (isLoading || !hasInitBackendAPI) return <div>Loading...</div>;
+  if (isLoading || !hasInitBackendAPI) {
+    return <Loading />;
+  }
 
   return (
     <Routes>

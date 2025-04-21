@@ -1,7 +1,7 @@
 import { ReactNode, useContext, useState } from "react";
 
 // components
-import { AdminView, AdminIconButton, Loading } from "@/components";
+import { AdminView, Loading } from "@/components";
 
 // context
 import { GlobalStateContext } from "@context/GlobalContext";
@@ -18,15 +18,11 @@ export const PageContainer = ({
   const { error, visitor } = useContext(GlobalStateContext);
   const [showSettings, setShowSettings] = useState(false);
 
+
   if (isLoading) return <Loading />;
 
   return (
     <div className="p-4">
-      {visitor?.isAdmin && (
-        <div>
-          <AdminIconButton setShowSettings={() => setShowSettings(!showSettings)} showSettings={showSettings} />
-        </div>
-      )}
       {(headerText || showSettings) && (
         <div className="pb-6">
           <h2>{showSettings ? "Settings" : headerText}</h2>

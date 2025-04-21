@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState, useRef, forwardRef, useImperativeHandle } from "react";
 
 // components
-import { PageContainer, PageFooter } from "@/components";
+import { PageContainer, PageFooter, OptionButton } from "@/components";
 import AdminIconButton from "@/components/AdminIconButton";
 import AdminView from "@/components/AdminView";
 
@@ -24,6 +24,7 @@ const Home = () => {
   const [pollData, setPollData] = useState<PollData | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [reloadPoll, setReloadPoll] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Track loading state so we can update page container
 
   // const hasVoted = pollData?.results?.[profileId] !== undefined;
 
@@ -37,20 +38,23 @@ const Home = () => {
 
   // Initial fetch of poll data
   useEffect(() => {
+    fetchPollData();
+  }, []);
+
+  // Reusable fetch of the poll data
+  const fetchPollData = () => {
     backendAPI
       .get("/updatePoll")
       .then((res) => {
         const poll = res.data.poll;
         const visitorVote = poll?.results?.[profileId]?.answer;
-        console.log("Visitor Vote:", visitorVote);
-        if (!(visitorVote == null)) {
+        if (visitorVote != null) {
           setSelectedOption(visitorVote);
-          console.log(selectedOption);
         }
         setPollData(poll ?? null);
       })
       .catch((error) => setErrorMessage(dispatch, error));
-  }, []);
+  };
 
   // Reload poll data when AdminView is closed NOT when the page is reloaded
   useEffect(() => {
@@ -75,12 +79,8 @@ const Home = () => {
   const closeAdminView = () => {
     setReloadPoll(prev => !prev); // toggles the trigger and causes the effect to run
   };
-  
 
-  if (!visitor) {
-    return <div>Loading...</div>;
-  }
-
+  // Handle vote submission with POST req
   const handleVote = (optionIndex: number) => {
     // Optimistically update local state
     setSelectedOption(optionIndex);
@@ -102,8 +102,12 @@ const Home = () => {
       .catch((error) => setErrorMessage(dispatch, error));
   };
 
+
+
   return (
-    <PageContainer>
+    // Wrap the entire page in the PageContainer component
+    <PageContainer isLoading={false}>
+      {/* Show settings button only if visitor is an admin */}
       {visitor && visitor.isAdmin && (
         <div className="flex justify-end mb-4">
           <AdminIconButton
@@ -114,6 +118,7 @@ const Home = () => {
         </div>
       )}
 
+      {/* Conditionally move to admin view if showSettings is true */}
       {showSettings ? (
         <AdminView />
       ) : (
@@ -125,6 +130,8 @@ const Home = () => {
                 {/* <strong>Question:</strong>  */}
                 {pollData.question}
               </p>
+
+              {/* Display all the poll options dynamically as buttons */}
               <div className="flex flex-col gap-4">
                 {pollData.answers?.map((ans, i) => {
                   // Only render a button if the option text is not empty.
@@ -152,11 +159,17 @@ const Home = () => {
                         : "0%"
                       : `${votesForOption} votes`;
 
+                  // the button rendering
                   return (
                     <div key={i} className="w-full">
                       <button
                         onClick={() => handleVote(i)}
-                        className={`btn btn-lg w-full ${
+                        className={`
+                          btn btn-lg 
+                          w-full
+                          !h-auto
+                          !py-2
+                           ${
                           isSelected
                             ? "border-2 border-blue-500 bg-transparent"
                             : "btn-outline"
@@ -173,6 +186,7 @@ const Home = () => {
                           <span style={{ textAlign: "left", width: "100%" }}>
                             {ans}
                           </span>
+                          {/* Display the results (make them opqaue) if we are an admin or we have an option shown selected */}
                           <span style={{ textAlign: "right", width: "100%", opacity: isAdmin || selectedOption !== null ? 1 : 0,  }} className="italic transition-opacity duration-300 ease-in-out"> 
                             {voteText}
                           </span>
@@ -190,12 +204,27 @@ const Home = () => {
                   );
                 })}
               </div>
+
+              {/* Show the refresh button only if there are answers, simply calls  */}
+              {pollData?.answers && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    className="btn btn-secondary !w-auto !px-5 !py-5"
+                    onClick={fetchPollData}
+                  >
+                    Refresh
+                  </button>
+                </div>
+              )}
+
               <p>
+                {/* debug info for display mode */}
                 {/* <strong>Display Mode:</strong> {pollData.displayMode} */}
               </p>
             </section>
           ) : (
-            <p>There is currently no poll configured.</p>
+            // If there is no poll data, show a message
+            <p className="text-center"> There is currently no poll configured. </p>
           )}
         </div>
       )}
