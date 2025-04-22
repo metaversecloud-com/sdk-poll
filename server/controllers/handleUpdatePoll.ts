@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, getDroppedAsset, initializeDroppedAssetDataObject } from "../utils/index.js";
+import { errorHandler, getCredentials, getDroppedAsset } from "../utils/index.js";
 
 /* 
   This function handles the PUT request to set the poll of a dropped asset.
@@ -8,8 +8,7 @@ import { errorHandler, getCredentials, getDroppedAsset, initializeDroppedAssetDa
 export const handleUpdatePoll = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug } = credentials;
-    const sceneDropId = credentials.sceneDropId || credentials.assetId;
+    const { assetId } = credentials;
     const { question, answer1, answer2, answer3, answer4, answer5, displayMode } = req.body;
 
     const droppedAsset = await getDroppedAsset(credentials);

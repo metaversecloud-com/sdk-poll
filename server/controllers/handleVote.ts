@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, getDroppedAsset, initializeDroppedAssetDataObject } from "../utils/index.js";
+import { errorHandler, getCredentials, getDroppedAsset } from "../utils/index.js";
 
 export const handleVote = async (req: Request, res: Response) => {
   try {
     // Extract credentials and vote details
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug } = credentials;
+    const { assetId } = credentials;
     const { optionId, profileId } = req.body;
     if (optionId === undefined || !profileId) {
       return res.status(400).json({ success: false, message: "optionId and profileId are required" });

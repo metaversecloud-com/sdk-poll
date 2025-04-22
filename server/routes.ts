@@ -1,11 +1,6 @@
 import express from "express";
 import {
-  handleDropAsset,
-  handleGetDroppedAsset,
   handleGetVisitor,
-  handleRemoveDroppedAssetsByUniqueName,
-  handleGetWorldDetails,
-  handleUpdateWorldDataObject,
   handleUpdatePoll,
   handleGetUpdatePoll,
   handleVote,
@@ -35,9 +30,9 @@ router.get("/system/health", (req, res) => {
 });
 
 // Dropped Assets
-router.post("/dropped-asset", handleDropAsset);
-router.get("/dropped-asset", handleGetDroppedAsset);
-router.post("/remove-dropped-assets", handleRemoveDroppedAssetsByUniqueName);
+// router.post("/dropped-asset", handleDropAsset);
+// router.get("/dropped-asset", handleGetDroppedAsset);
+// router.post("/remove-dropped-assets", handleRemoveDroppedAssetsByUniqueName);
 
 // New Route for creating data object for newly dropped poll
 router.put("/updatePoll", handleUpdatePoll);
@@ -55,7 +50,7 @@ router.post("/admin/reset", handleResetScene);
 router.get("/visitor", handleGetVisitor);
 
 // World
-router.get("/world", handleGetWorldDetails);
-router.put("/world/data-object", handleUpdateWorldDataObject);
+// router.get("/world", handleGetWorldDetails);
+// router.put("/world/data-object", handleUpdateWorldDataObject);
 
 export default router;
