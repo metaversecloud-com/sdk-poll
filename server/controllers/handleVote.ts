@@ -53,10 +53,6 @@ export const handleVote = async (req: Request, res: Response) => {
       { lock: { lockId, releaseLock: true } }
     );
 
-    // Log the updated poll data for debugging
-    // await droppedAsset.fetchDataObject();
-    // console.log("Vote updated, poll data:", droppedAsset.dataObject.poll);
-
     return res.json({ success: true, poll: droppedAsset.dataObject.poll });
   } catch (error) {
     return errorHandler({

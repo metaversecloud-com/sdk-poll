@@ -62,7 +62,6 @@ const Home = () => {
       hasMounted.current = true;
       return;
     }
-    console.log("Fetching poll data again...");
     backendAPI
       .get("/updatePoll")
       .then((res) => {
@@ -91,8 +90,6 @@ const Home = () => {
         profileId: profileId,
       })
       .then((res) => {
-        console.log(visitor.profileId, "VOTED FOR:", optionIndex);
-        console.log("Vote submitted successfully", res.data);
         return backendAPI.get("/updatePoll");
       })
       .then((res) => {

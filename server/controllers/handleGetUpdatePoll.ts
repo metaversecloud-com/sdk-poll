@@ -10,14 +10,11 @@ export const handleGetUpdatePoll = async (req: Request, res: Response) => {
     const credentials = getCredentials(req.query);
     const { assetId, urlSlug } = credentials;
 
+    // Get the dropped asset so we can get its data object
     const droppedAsset = await getDroppedAsset(credentials);
-    // await initializeDroppedAssetDataObject(droppedAsset);
 
-    // await droppedAsset.fetchDataObject();
-    const pollData = droppedAsset.dataObject.poll || {}; 
-    //print poll data
-    // console.log("Poll data:", pollData);   
-    console.log(droppedAsset.dataObject.poll);
+    // Get the data object
+    const pollData = droppedAsset.dataObject.poll || {};  
 
     return res.json({ success: true, poll: pollData });
 
