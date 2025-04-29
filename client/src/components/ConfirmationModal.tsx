@@ -1,49 +1,47 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useContext, useState } from "react";
+import { useState } from "react";
 
-// context
-import { GlobalDispatchContext } from "@context/GlobalContext";
-
-// utils
-import { backendAPI, setErrorMessage, setGameState } from "@/utils";
-
-export const ConfirmationModal = ({
-  handleToggleShowConfirmationModal,
-}: {
+interface ConfirmationModalProps {
+  title: string;
+  message: string;
+  onConfirm: () => void;
   handleToggleShowConfirmationModal: () => void;
-}) => {
-  const dispatch = useContext(GlobalDispatchContext);
+}
 
+/* 
+  New confirmation modal component for displaying confirmation messages including
+  customization props for re-use.
+*/
+export const ConfirmationModal = ({
+  title,
+  message,
+  onConfirm,
+  handleToggleShowConfirmationModal,
+}: ConfirmationModalProps) => {
   const [areButtonsDisabled, setAreButtonsDisabled] = useState(false);
-
-  const handleReset = () => {
-    setAreButtonsDisabled(true);
-
-    backendAPI
-      .post(`/admin/reset`)
-      .then((response: { data: any }) => setGameState(dispatch, response.data))
-      .catch((error: any) => setErrorMessage(dispatch, error))
-      .finally(() => {
-        setAreButtonsDisabled(false);
-        handleToggleShowConfirmationModal();
-      });
-  };
 
   return (
     <div className="modal-container">
       <div className="modal">
-        <h4>Reset?</h4>
-        <p>All player data will be erased.</p>
+        <h4>{title}</h4>
+        <p>{message}</p>
         <div className="actions">
           <button
             id="close"
             className="btn btn-outline"
-            onClick={() => handleToggleShowConfirmationModal()}
+            onClick={handleToggleShowConfirmationModal}
             disabled={areButtonsDisabled}
           >
             No
           </button>
-          <button className="btn btn-danger-outline" onClick={() => handleReset()} disabled={areButtonsDisabled}>
+          <button
+            className="btn btn-danger-outline"
+            onClick={() => {
+              setAreButtonsDisabled(true);
+              onConfirm();
+              handleToggleShowConfirmationModal();
+            }}
+            disabled={areButtonsDisabled}
+          >
             Yes
           </button>
         </div>

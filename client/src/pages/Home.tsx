@@ -1,96 +1,231 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef, forwardRef, useImperativeHandle } from "react";
 
 // components
-import { PageContainer, PageFooter } from "@/components";
+import { PageContainer, PageFooter, OptionButton } from "@/components";
+import AdminIconButton from "@/components/AdminIconButton";
+import AdminView from "@/components/AdminView";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
 
 // utils
-import { backendAPI, setErrorMessage, setGameState } from "@/utils";
+import { backendAPI, setErrorMessage } from "@/utils";
 
-const defaultDroppedAsset = { assetName: "", bottomLayerURL: "", id: null, topLayerURL: null };
+interface PollData {
+  question: string;
+  answers: string[];
+  displayMode: "percentage" | "count";
+  options?: { [key: string]: { votes: number } };
+  results?: { [profileId: string]: { answer: number } };
+}
 
 const Home = () => {
+  const [showSettings, setShowSettings] = useState(false);
+  const [pollData, setPollData] = useState<PollData | null>(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [reloadPoll, setReloadPoll] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Track loading state so we can update page container
+
+  // const hasVoted = pollData?.results?.[profileId] !== undefined;
+
   const dispatch = useContext(GlobalDispatchContext);
-  const { gameState, hasInteractiveParams, hasSetupBackend } = useContext(GlobalStateContext);
+  const { visitor } = useContext(GlobalStateContext);
+  const profileId = visitor?.profileId || null;
+  const isAdmin = visitor?.isAdmin || false;
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [areButtonsDisabled, setAreButtonsDisabled] = useState(false);
-  const [droppedAsset, setDroppedAsset] = useState(defaultDroppedAsset);
+  const hasMounted = useRef(false);
 
+
+  // Initial fetch of poll data
   useEffect(() => {
-    if (hasInteractiveParams) {
-      backendAPI
-        .get("/dropped-asset")
-        .then((response) => {
-          setGameState(dispatch, response.data);
-          setDroppedAsset(response.data.droppedAsset);
-        })
-        .then(() => {
-          backendAPI.put("/world/fire-toast");
-        })
-        .catch((error) => setErrorMessage(dispatch, error))
-        .finally(() => {
-          setIsLoading(false);
-          console.log("🚀 ~ Home.tsx ~ gameState:", gameState);
-        });
-    }
-  }, [hasInteractiveParams]);
+    fetchPollData();
+  }, []);
 
-  const handleGetDroppedAsset = async () => {
-    setAreButtonsDisabled(true);
-    setDroppedAsset(defaultDroppedAsset);
-
+  // Reusable fetch of the poll data
+  const fetchPollData = () => {
     backendAPI
-      .get("/dropped-asset")
-      .then((response) => {
-        setDroppedAsset(response.data.droppedAsset);
+      .get("/updatePoll")
+      .then((res) => {
+        const poll = res.data.poll;
+        const visitorVote = poll?.results?.[profileId]?.answer;
+        if (visitorVote != null) {
+          setSelectedOption(visitorVote);
+        }
+        setPollData(poll ?? null);
       })
-      .catch((error) => setErrorMessage(dispatch, error))
-      .finally(() => {
-        setAreButtonsDisabled(false);
-      });
+      .catch((error) => setErrorMessage(dispatch, error));
   };
 
-  if (!hasSetupBackend) return <div />;
+  // Reload poll data when AdminView is closed NOT when the page is reloaded
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+    backendAPI
+      .get("/updatePoll")
+      .then((res) => {
+        const poll = res.data.poll;
+        const sameResults = JSON.stringify(poll?.results) === JSON.stringify(pollData?.results);
+        if (!sameResults) {   
+          setSelectedOption(null);   
+        }
+        setPollData(poll ?? null);
+      })
+      .catch((error) => setErrorMessage(dispatch, error));
+  }, [reloadPoll]);
+
+  const closeAdminView = () => {
+    setReloadPoll(prev => !prev); // toggles the trigger and causes the effect to run
+  };
+
+  // Handle vote submission with POST req
+  const handleVote = (optionIndex: number) => {
+    // Optimistically update local state
+    setSelectedOption(optionIndex);
+
+    backendAPI
+      .post("/vote", {
+        optionId: optionIndex,
+        profileId: profileId,
+      })
+      .then((res) => {
+        return backendAPI.get("/updatePoll");
+      })
+      .then((res) => {
+        const poll = res.data.poll;
+        setPollData(poll ?? null);
+      })
+      .catch((error) => setErrorMessage(dispatch, error));
+  };
+
+
 
   return (
-    <PageContainer isLoading={isLoading}>
-      <>
-        <h1 className="h2">Server side example using interactive parameters</h1>
-        <div className="max-w-screen-lg">
-          {!hasInteractiveParams ? (
-            <p>
-              Edit an asset in your world and open the Links page in the Modify Asset drawer and add a link to your
-              website or use &quot;http://localhost:3000&quot; for testing locally. You can also add assetId,
-              interactiveNonce, interactivePublicKey, urlSlug, and visitorId directly to the URL as search parameters to
-              use this feature.
-            </p>
+    // Wrap the entire page in the PageContainer component
+    <PageContainer isLoading={false}>
+      {/* Show settings button only if visitor is an admin */}
+      {visitor && visitor.isAdmin && (
+        <div className="flex justify-end mb-4">
+          <AdminIconButton
+            setShowSettings={() => setShowSettings(!showSettings)}
+            showSettings={showSettings}
+            onClose={closeAdminView}
+          />
+        </div>
+      )}
+
+      {/* Conditionally move to admin view if showSettings is true */}
+      {showSettings ? (
+        <AdminView />
+      ) : (
+        <div>
+          <h1 className="h2 text-center" style={{ marginBottom: '1rem' }}>Poll App</h1>
+          {pollData && pollData.question ? (
+            <section className="mt-6">
+              <p style={{ marginBottom: '1rem' }}>
+                {/* <strong>Question:</strong>  */}
+                {pollData.question}
+              </p>
+
+              {/* Display all the poll options dynamically as buttons */}
+              <div className="flex flex-col gap-4">
+                {pollData.answers?.map((ans, i) => {
+                  // Only render a button if the option text is not empty.
+                  if (ans.trim() === "") return null;
+
+                  // Determine if this option is selected by the current visitor.
+                  const userVote =
+                    pollData.results && visitor?.profileId
+                      ? pollData.results[visitor.profileId]?.answer
+                      : undefined;
+                  const isSelected = userVote === i;
+
+                  // Calculate votes for this option and total votes.
+                  const votesForOption = pollData.options?.[i]?.votes || 0;
+                  const totalVotes = Object.values(pollData.options || {}).reduce(
+                    (sum, opt: { votes: number }) => sum + (opt.votes || 0),
+                    0
+                  );
+
+                  // Compute vote text based on displayMode.
+                  const voteText =
+                    pollData.displayMode === "percentage"
+                      ? totalVotes > 0
+                        ? `${((votesForOption / totalVotes) * 100).toFixed(0)}%`
+                        : "0%"
+                      : `${votesForOption} votes`;
+
+                  // the button rendering
+                  return (
+                    <div key={i} className="w-full">
+                      <button
+                        onClick={() => handleVote(i)}
+                        className={`
+                          btn btn-lg 
+                          w-full
+                          !h-auto
+                          !py-2
+                           ${
+                          isSelected
+                            ? "border-2 border-blue-500 bg-transparent"
+                            : "btn-outline"
+                        }`}
+                      >
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr auto",
+                            width: "100%",
+                          }}
+                          className="py-2" 
+                        >
+                          <span style={{ textAlign: "left", width: "100%" }}>
+                            {ans}
+                          </span>
+                          {/* Display the results (make them opqaue) if we are an admin or we have an option shown selected */}
+                          <span style={{ textAlign: "right", width: "100%", opacity: isAdmin || selectedOption !== null ? 1 : 0,  }} className="italic transition-opacity duration-300 ease-in-out"> 
+                            {voteText}
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Gradient bar code is commented out for now */}
+                      {/* <div
+                        style={{
+                          height: "4px", 
+                          background: `linear-gradient(to right, ${darkBlue} ${percentage}%, transparent ${percentage}%)`,
+                        }}
+                      /> */}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Show the refresh button only if there are answers, simply calls  */}
+              {pollData?.answers && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    className="btn btn-secondary !w-auto !px-5 !py-5"
+                    onClick={fetchPollData}
+                  >
+                    Refresh
+                  </button>
+                </div>
+              )}
+
+              <p>
+                {/* debug info for display mode */}
+                {/* <strong>Display Mode:</strong> {pollData.displayMode} */}
+              </p>
+            </section>
           ) : (
-            <p className="my-4">Interactive parameters found, nice work!</p>
+            // If there is no poll data, show a message
+            <p className="text-center"> There is currently no poll configured. </p>
           )}
         </div>
-
-        {droppedAsset.id && (
-          <div className="flex flex-col w-full items-start">
-            <p className="mt-4 mb-2">
-              You have successfully retrieved the dropped asset details for {droppedAsset.assetName}!
-            </p>
-            <img
-              className="w-96 h-96 object-cover rounded-2xl my-4"
-              alt="preview"
-              src={droppedAsset.topLayerURL || droppedAsset.bottomLayerURL}
-            />
-          </div>
-        )}
-
-        <PageFooter>
-          <button className="btn" disabled={areButtonsDisabled} onClick={handleGetDroppedAsset}>
-            Get Dropped Asset Details
-          </button>
-        </PageFooter>
-      </>
+      )}
+      <PageFooter />
     </PageContainer>
   );
 };

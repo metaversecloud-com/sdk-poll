@@ -1,54 +1,55 @@
-# README Template
 
-Please update the following in each of your SDK application.
+# Introduction / Summary
 
-## Introduction / Summary
-
-This boilerplate is meant to give you a simple starting point to build new features in Topia using our Javascript SDK. Please reference the [documentation](https://metaversecloud-com.github.io/mc-sdk-js/index.html) for a more detailed breakdown of what the SDK is capable of and how to use it!
+The In World Poll App allows admins to create a poll by configuring a question and up to 5 answer options. Users can then vote for their preferred option and view the poll results once they've cast their vote. Results are displayed based on a configuration that shows either the percentage or the total number of votes for each answer.
 
 ## Key Features
 
 ### Canvas elements & interactions
 
-- Key Asset: When clicked this asset will open the drawer and allow users and admins to start interacting with the app.
+- **Key Asset:** When clicked, this asset opens the app in the drawer and allows both admins and users to interact with the poll.
 
 ### Drawer content
 
-- How to play instructions
-- Leaderboard
-- Admin features (see below)
+- **User View:**
+  - Main page with a placeholder text if no poll is configured.
+  - Displays the poll title, question, and available answers.
+  - Allows users to cast a single vote and view poll results (either as percentages or vote counts based on admin configuration).
+
+- **Admin View:**
+  - Accessible via a settings icon on the main page.
+  - Contains poll configuration options and admin-specific interactions (see below).
 
 ### Admin features
 
-_Does your app have special admin functionality? If so your key features may looks something like this:_
-
-- Access: Click on the key asset to open the drawer and then select the Admin tab. Any changes you make here will only affect this instance of the application and will not impact other instances dropped in this or other worlds.
-- Theme selection: Use the dropdown to select a theme.
-- Reset: Click on the Reset button to clear the active game state and rebuild the game board in it's default state.
-
-### Themes description
-
-- Winter (default): A snowy theme that when selected will drop snowflakes throughout the scene
-- Spring: A garden theme that when selected will drop flowers throughout the scene
+- **Access:**
+  - When the admin clicks on the key asset, the app opens in the drawer.
+  - A settings icon on the main page leads to the admin page.
+- **Poll Configuration:**
+  - **Question Entry:** Admin can enter the poll question.
+  - **Answer Options:**
+    - Admin can provide between 2 to 5 answer options.
+    - Five text fields are provided; only fields with input values are dynamically rendered for users.
+  - **Display Mode:**
+    - Admin selects whether poll results are displayed as a percentage or as a number of votes via radio buttons
+    - Options:
+      - Percentage
+      - Number of Votes
+  - **Save Button:**
+    - Clicking on the Save button updates the app with the current poll filled out in the admin form page and deletes any existing data in the assets data object
+  - **Reset Button:**
+    - Clicking on the Reset button clears the current poll and all the saved data in the assets data object
 
 ### Data objects
 
-_We use data objects to store information about each implementation of the app per world._
-
 - Key Asset: the data object attached to the dropped key asset will store information related to this specific implementation of the app and would be deleted if the key asset is removed from world. Example data:
-  - isResetInProgress
-  - lastInteraction
-  - lastPlayerTurn
-  - playerCount
-  - resetCount
-  - turnCount
-- World: the data object attached to the world will store analytics information for every instance of the app in a given world by keyAssetId and will persist even if a specific instance is removed from world. Example data:
-  - gamesPlayedByUser (`keyAssets.${assetId}.gamesPlayedByUser.${profileId}.count`)
-  - gamesWonByUser (`keyAssets.${keyAssetId}.gamesWonByUser.${profileId}.count`)
-  - totalGamesResetCount (`keyAssets.${assetId}.totalGamesResetCount`)
-  - totalGamesWonCount (`keyAssets.${assetId}.totalGamesWonCount`)
+  - question: string;
+  - answers: string[];
+  - displayMode: "percentage" | "count";
+  - options?: { [key: string]: { votes: number } };
+  - results?: { [profileId: string]: { answer: number } };
 
-## Developers:
+## Developers
 
 ### Built With
 
