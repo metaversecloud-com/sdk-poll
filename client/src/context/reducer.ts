@@ -2,10 +2,10 @@ import {
   ActionType,
   InitialState,
   SET_ERROR,
-  SET_GAME_STATE,
   SET_HAS_SETUP_BACKEND,
   SET_INTERACTIVE_PARAMS,
   SET_VISITOR_INFO,
+  SET_POLL,
 } from "./types";
 
 const globalReducer = (state: InitialState, action: ActionType) => {
@@ -24,16 +24,16 @@ const globalReducer = (state: InitialState, action: ActionType) => {
         ...payload,
         hasSetupBackend: true,
       };
-    case SET_GAME_STATE:
-      return {
-        ...state,
-        ...payload,
-        error: "",
-      };
     case SET_VISITOR_INFO:
       return {
         ...state,
         visitor: payload,
+      };
+    case SET_POLL:
+      return {
+        ...state,
+        poll: payload.poll,
+        error: "",
       };
     case SET_ERROR:
       return {
