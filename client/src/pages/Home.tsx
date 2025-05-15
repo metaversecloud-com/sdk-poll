@@ -12,9 +12,8 @@ import { SET_POLL } from "@/context/types";
 
 const Home = () => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Track loading state so we can update page container
-
-  // const hasVoted = poll?.results?.[profileId] !== undefined;
+  const [isLoading, setIsLoading] = useState(true);
+  const [areButtonsDisabled, setAreButtonsDisabled] = useState(false);
 
   const dispatch = useContext(GlobalDispatchContext);
   const { poll, profileId, visitor } = useContext(GlobalStateContext);
@@ -51,6 +50,7 @@ const Home = () => {
   const handleVote = (optionIndex: number) => {
     // Optimistically update local state
     setSelectedOption(optionIndex);
+    setAreButtonsDisabled(true);
 
     backendAPI
       .post("/vote", {
@@ -67,11 +67,13 @@ const Home = () => {
           payload: { poll },
         });
       })
-      .catch((error) => setErrorMessage(dispatch, error));
+      .catch((error) => setErrorMessage(dispatch, error))
+      .finally(() => {
+        setAreButtonsDisabled(false);
+      });
   };
 
   return (
-    // Wrap the entire page in the PageContainer component
     <PageContainer isLoading={isLoading}>
       <div>
         <h1 className="h2 text-center" style={{ marginBottom: "1rem" }}>
@@ -79,10 +81,7 @@ const Home = () => {
         </h1>
         {poll && poll.question ? (
           <section className="mt-6">
-            <p style={{ marginBottom: "1rem" }}>
-              {/* <strong>Question:</strong>  */}
-              {poll.question}
-            </p>
+            <p style={{ marginBottom: "1rem" }}>{poll.question}</p>
 
             {/* Display all the poll options dynamically as buttons */}
             <div className="flex flex-col gap-4">
@@ -109,10 +108,10 @@ const Home = () => {
                       : "0%"
                     : `${votesForOption} votes`;
 
-                // the button rendering
                 return (
                   <div key={i} className="w-full">
                     <button
+                      disabled={areButtonsDisabled}
                       onClick={() => handleVote(i)}
                       className={`
                           btn btn-lg 
@@ -130,7 +129,7 @@ const Home = () => {
                         className="py-2"
                       >
                         <span style={{ textAlign: "left", width: "100%" }}>{ans}</span>
-                        {/* Display the results (make them opqaue) if we are an admin or we have an option shown selected */}
+                        {/* Display the results (make them opaque) if we are an admin or we have an option shown selected */}
                         <span
                           style={{
                             textAlign: "right",
@@ -156,19 +155,18 @@ const Home = () => {
               })}
             </div>
 
-            {/* Show the refresh button only if there are answers, simply calls  */}
+            {/* Show the refresh button only if there are answers  */}
             {poll?.answers && (
               <div className="mt-8 flex justify-center">
-                <button className="btn btn-secondary !w-auto !px-5 !py-5" onClick={fetchPollData}>
+                <button
+                  className="btn btn-secondary !w-auto !px-5 !py-5"
+                  disabled={areButtonsDisabled}
+                  onClick={fetchPollData}
+                >
                   Refresh
                 </button>
               </div>
             )}
-
-            <p>
-              {/* debug info for display mode */}
-              {/* <strong>Display Mode:</strong> {poll.displayMode} */}
-            </p>
           </section>
         ) : (
           // If there is no poll data, show a message

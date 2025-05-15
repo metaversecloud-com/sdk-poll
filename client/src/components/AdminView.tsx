@@ -124,72 +124,56 @@ export const AdminView = () => {
   };
 
   return (
-    // Extra padding at the bottom (pb-16) so the footer does not block scrollable content.
-    <div className="relative max-h-[80vh] overflow-y-auto pb-16">
-      {/* Center the container and slightly shrink option boxes / add padding */}
-      <div className="container mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 grid gap-4">
-        <div className="container grid gap-4">
-          {/* Sticky header for user context while filling out the poll form*/}
-          <div className="sticky top-0 bg-white z-10 pt-4 pb-5 mb-4">
-            <h2 className="h3">Create or Update Poll</h2>
-          </div>
+    <div className="grid grid-flow-row gap-4 pb-20">
+      <h3>Create or Update Poll</h3>
 
-          {errorMessage && <div className="p-4 bg-red-100 text-red-600 rounded">{errorMessage}</div>}
+      {errorMessage && <p className="p3 py-4 text-center text-error">{errorMessage}</p>}
 
-          {/* Poll Question formatting*/}
-          <h2>Poll Question</h2>
-          <input className="input" name="question" value={formData.question} onChange={handleChange} maxLength={150} />
+      <h4>Poll Question</h4>
+      <input className="input" name="question" value={formData.question} onChange={handleChange} maxLength={150} />
 
-          {/* Poll Options formatting*/}
-          {["answer1", "answer2", "answer3", "answer4", "answer5"].map((field, index) => (
-            <div key={index}>
-              <h2>Option {index + 1}</h2>
-              <input
-                className="input"
-                name={field}
-                value={formData[field as keyof PollFormInputs]}
-                onChange={handleChange}
-                maxLength={16}
-              />
-              {/* <p className="text-sm text-gray-500">{formData[field as keyof PollFormInputs].length}/40</p> */}
-            </div>
-          ))}
-
-          {/* How to Display results formatting */}
-          <div className="mb-2"></div>
-          <h2>Results Display</h2>
-          {/* Using flex and gap to separate the radio buttons */}
-          <div className="flex gap-4">
-            <label>
-              <input
-                type="radio"
-                name="displayMode"
-                value="percentage"
-                checked={formData.displayMode === "percentage"}
-                onChange={handleChange}
-                className="mr-1"
-              />
-              Percentage
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="displayMode"
-                value="count"
-                checked={formData.displayMode === "count"}
-                onChange={handleChange}
-                className="mr-1"
-              />
-              Number of Votes
-            </label>
-          </div>
-
-          {/* Buffering section below the input form options */}
-          <div className="mb-8"></div>
+      {["answer1", "answer2", "answer3", "answer4", "answer5"].map((field, index) => (
+        <div key={index}>
+          <h4>Option {index + 1}</h4>
+          <input
+            className="input"
+            name={field}
+            value={formData[field as keyof PollFormInputs]}
+            onChange={handleChange}
+            maxLength={16}
+          />
         </div>
+      ))}
+
+      <h3 className="py-4">Results Display</h3>
+      {/* Using flex and gap to separate the radio buttons */}
+      <div className="flex gap-4">
+        <label>
+          <input
+            type="radio"
+            name="displayMode"
+            value="percentage"
+            checked={formData.displayMode === "percentage"}
+            onChange={handleChange}
+            className="mr-1"
+          />
+          Percentage
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="displayMode"
+            value="count"
+            checked={formData.displayMode === "count"}
+            onChange={handleChange}
+            className="mr-1"
+          />
+          Number of Votes
+        </label>
       </div>
 
-      {/* Save and Reset buttons formatting */}
+      {errorMessage && <p className="p3 py-10 text-center text-error">{errorMessage}</p>}
+
       <PageFooter>
         <button className="btn btn-primary mb-2" onClick={handleSaveClick} disabled={isSubmitting}>
           {isSubmitting ? "Updating..." : "Save"}
@@ -199,9 +183,6 @@ export const AdminView = () => {
         </button>
       </PageFooter>
 
-      {errorMessage && <p className="p3 text-error">{errorMessage}</p>}
-
-      {/* Confirmation modal for Save and Reset buttons */}
       {showConfirmationModal && (
         <ConfirmationModal
           title={modalType === "save" ? "Override Poll?" : "Reset Poll?"}
