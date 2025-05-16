@@ -13,11 +13,9 @@ export const handleVote = async (req: Request, res: Response) => {
 
     // Get the dropped asset and ensure its data object exists
     const droppedAsset = await getDroppedAsset(credentials);
-    // await initializeDroppedAssetDataObject(droppedAsset);
 
     // Fetch the current data object
-    await droppedAsset.fetchDataObject();
-    const currentPoll = droppedAsset.dataObject.poll || {};
+    const currentPoll = droppedAsset.dataObject || {};
     const previousVote = currentPoll.results?.[profileId]?.answer;
 
     // New copies of the current options/results data
@@ -26,34 +24,30 @@ export const handleVote = async (req: Request, res: Response) => {
 
     // If the user already voted, remove the previous vote by decrementing that option
     if (previousVote !== undefined) {
-        if (newOptions[previousVote] && typeof newOptions[previousVote].votes === "number") {
-            newOptions[previousVote] = { votes: Math.max(newOptions[previousVote].votes - 1, 0) };
-        }
+      if (newOptions[previousVote] && typeof newOptions[previousVote].votes === "number") {
+        newOptions[previousVote] = { votes: Math.max(newOptions[previousVote].votes - 1, 0) };
+      }
     }
 
     newOptions[optionId] = { votes: (newOptions[optionId]?.votes || 0) + 1 };
 
     newResults[profileId] = { answer: optionId };
 
-    const updatedPoll = {
-      question: currentPoll.question || "",
-      answers: currentPoll.answers || [],
-      displayMode: currentPoll.displayMode || "percentage",
-      options: newOptions,
-      results: newResults,
-    };
     const lockId = `${assetId}-voteUpdate-${new Date(Math.round(new Date().getTime() / 10000) * 10000)}`;
 
     // Update the entire poll object in one go
+
     await droppedAsset.updateDataObject(
       {
-        poll: updatedPoll,
-        lastInteractionDate: new Date(),
+        options: newOptions,
+        results: newResults,
       },
-      { lock: { lockId, releaseLock: true } }
+      { lock: { lockId, releaseLock: true } },
     );
 
-    return res.json({ success: true, poll: droppedAsset.dataObject.poll });
+    await droppedAsset.fetchDataObject();
+
+    return res.json({ success: true, poll: droppedAsset.dataObject });
   } catch (error) {
     return errorHandler({
       error,

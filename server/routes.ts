@@ -2,7 +2,7 @@ import express from "express";
 import {
   handleGetVisitor,
   handleUpdatePoll,
-  handleGetUpdatePoll,
+  handleGetPoll,
   handleVote,
   handleResetScene,
 } from "./controllers/index.js";
@@ -29,16 +29,11 @@ router.get("/system/health", (req, res) => {
   });
 });
 
-// Dropped Assets
-// router.post("/dropped-asset", handleDropAsset);
-// router.get("/dropped-asset", handleGetDroppedAsset);
-// router.post("/remove-dropped-assets", handleRemoveDroppedAssetsByUniqueName);
+// New Route for getting the data for existing poll
+router.get("/poll", handleGetPoll);
 
 // New Route for creating data object for newly dropped poll
-router.put("/updatePoll", handleUpdatePoll);
-
-// New Route for getting the data for existing poll
-router.get("/updatePoll", handleGetUpdatePoll);
+router.put("/poll", handleUpdatePoll);
 
 // New route for updating the poll w/ new vote
 router.post("/vote", handleVote);
@@ -48,9 +43,5 @@ router.post("/admin/reset", handleResetScene);
 
 // Visitor
 router.get("/visitor", handleGetVisitor);
-
-// World
-// router.get("/world", handleGetWorldDetails);
-// router.put("/world/data-object", handleUpdateWorldDataObject);
 
 export default router;
