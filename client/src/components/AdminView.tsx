@@ -147,7 +147,7 @@ export const AdminView = () => {
 
       <h3 className="py-4">Results Display</h3>
       {/* Using flex and gap to separate the radio buttons */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 pb-8">
         <label>
           <input
             type="radio"
