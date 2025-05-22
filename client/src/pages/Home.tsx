@@ -74,10 +74,10 @@ const Home = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading} headerText="Poll">
+    <PageContainer isLoading={isLoading}>
       {poll && poll.question ? (
         <div className="grid gap-4">
-          <p className="mb-4">{poll.question}</p>
+          <h4 className="mb-4">{poll.question}</h4>
 
           {/* Display all the poll options dynamically as buttons */}
           {poll.answers?.map((ans, i) => {

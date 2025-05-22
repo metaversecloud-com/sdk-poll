@@ -129,23 +129,35 @@ export const AdminView = () => {
 
       {errorMessage && <p className="p3 py-4 text-center text-error">{errorMessage}</p>}
 
-      <h4>Poll Question</h4>
-      <input className="input" name="question" value={formData.question} onChange={handleChange} maxLength={150} />
+      <div className="input-group">
+        <label className="label">Poll Question</label>
+        <input
+          id="titleInput"
+          className="input"
+          name="question"
+          value={formData.question}
+          onChange={handleChange}
+          maxLength={150}
+        />
+        <span className="input-char-count">{formData.question.length}/150</span>
+      </div>
 
       {["answer1", "answer2", "answer3", "answer4", "answer5"].map((field, index) => (
-        <div key={index}>
-          <h4>Option {index + 1}</h4>
+        <div key={index} className="input-group">
+          <label className="label">Option {index + 1}</label>
           <input
+            id="titleInput"
             className="input"
             name={field}
             value={formData[field as keyof PollFormInputs]}
             onChange={handleChange}
             maxLength={16}
           />
+          <span className="input-char-count">{formData[field as keyof PollFormInputs].length}/16</span>
         </div>
       ))}
 
-      <h3 className="py-4">Results Display</h3>
+      <h4 className="pt-4">Results Display</h4>
       {/* Using flex and gap to separate the radio buttons */}
       <div className="flex gap-4 pb-8">
         <label>
@@ -175,7 +187,7 @@ export const AdminView = () => {
       {errorMessage && <p className="p3 py-10 text-center text-error">{errorMessage}</p>}
 
       <PageFooter>
-        <button className="btn btn-primary mb-2" onClick={handleSaveClick} disabled={isSubmitting}>
+        <button className="btn mb-2" onClick={handleSaveClick} disabled={isSubmitting}>
           {isSubmitting ? "Updating..." : "Save"}
         </button>
         <button className="btn btn-danger" onClick={handleResetClick} disabled={isSubmitting}>
