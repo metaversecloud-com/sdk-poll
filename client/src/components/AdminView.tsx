@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 
 // components
 import { ConfirmationModal, PageFooter } from "@/components";
@@ -7,7 +7,7 @@ import { ConfirmationModal, PageFooter } from "@/components";
 import { backendAPI } from "@/utils/backendAPI";
 
 // context
-import { GlobalDispatchContext } from "@/context/GlobalContext";
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
 import { SET_POLL } from "@/context/types";
 
 interface PollFormInputs {
@@ -41,6 +41,7 @@ export const AdminView = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalType, setModalType] = useState<"save" | "reset" | null>(null);
+  const { poll } = useContext(GlobalStateContext);
 
   function handleToggleShowConfirmationModal() {
     setShowConfirmationModal(!showConfirmationModal);
@@ -122,6 +123,22 @@ export const AdminView = () => {
     setModalType("reset"); // using the same new generic modal
     setShowConfirmationModal(true);
   };
+
+  useEffect(() => {
+    if (!poll) return;
+    // pull the question + the answers array
+    const { question, answers, displayMode } = poll;
+
+    setFormData({
+      question,
+      answer1: answers[0] || "",
+      answer2: answers[1] || "",
+      answer3: answers[2] || "",
+      answer4: answers[3] || "",
+      answer5: answers[4] || "",
+      displayMode: displayMode === "count" ? "count" : "percentage",
+    });
+  }, [poll]);
 
   return (
     <div className="grid grid-flow-row gap-4 pb-20">
