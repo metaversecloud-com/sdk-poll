@@ -42,7 +42,15 @@ export const handleVote = async (req: Request, res: Response) => {
         options: newOptions,
         results: newResults,
       },
-      { lock: { lockId, releaseLock: true } },
+      {
+        lock: { lockId, releaseLock: true },
+        analytics: [
+          {
+            analyticName: "completions",
+            uniqueKey: profileId,
+          },
+        ],
+      },
     );
 
     await droppedAsset.fetchDataObject();
