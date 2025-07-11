@@ -4,7 +4,7 @@ import { errorHandler, getCredentials, getDroppedAsset } from "../utils/index.js
 export const handleGetPoll = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { profileId } = credentials;
+    const { profileId, urlSlug } = credentials;
 
     const droppedAsset = await getDroppedAsset(credentials);
 
@@ -16,6 +16,8 @@ export const handleGetPoll = async (req: Request, res: Response) => {
         analytics: [
           {
             analyticName: "starts",
+            profileId,
+            urlSlug,
             uniqueKey: profileId,
           },
         ],
