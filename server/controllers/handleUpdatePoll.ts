@@ -8,7 +8,7 @@ import { errorHandler, getCredentials, getDroppedAsset } from "../utils/index.js
 export const handleUpdatePoll = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId } = credentials;
+    const { assetId, profileId, urlSlug } = credentials;
     const { question, answer1, answer2, answer3, answer4, answer5, displayMode } = req.body;
 
     const droppedAsset = await getDroppedAsset(credentials);
@@ -28,7 +28,17 @@ export const handleUpdatePoll = async (req: Request, res: Response) => {
         },
         results: {},
       },
-      { lock: { lockId, releaseLock: true } },
+      {
+        lock: { lockId, releaseLock: true },
+        analytics: [
+          {
+            analyticName: "updates",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      },
     );
 
     await droppedAsset.fetchDataObject();
