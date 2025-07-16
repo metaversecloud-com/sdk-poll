@@ -5,7 +5,7 @@ export const handleVote = async (req: Request, res: Response) => {
   try {
     // Extract credentials and vote details
     const credentials = getCredentials(req.query);
-    const { assetId } = credentials;
+    const { assetId, urlSlug } = credentials;
     const { optionId, profileId } = req.body;
     if (optionId === undefined || !profileId) {
       return res.status(400).json({ success: false, message: "optionId and profileId are required" });
@@ -42,7 +42,17 @@ export const handleVote = async (req: Request, res: Response) => {
         options: newOptions,
         results: newResults,
       },
-      { lock: { lockId, releaseLock: true } },
+      {
+        lock: { lockId, releaseLock: true },
+        analytics: [
+          {
+            analyticName: "completions",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      },
     );
 
     await droppedAsset.fetchDataObject();
