@@ -26,6 +26,8 @@ interface PollFormInputs {
 */
 export const AdminView = () => {
   const dispatch = useContext(GlobalDispatchContext);
+  const pollOptionMaxTextLength = 100;
+  const pollQuestionMaxTextLength = 150;
 
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
@@ -154,9 +156,11 @@ export const AdminView = () => {
           name="question"
           value={formData.question}
           onChange={handleChange}
-          maxLength={150}
+          maxLength={pollQuestionMaxTextLength}
         />
-        <span className="input-char-count">{formData.question.length}/150</span>
+        <span className="input-char-count">
+          {formData.question.length}/{pollQuestionMaxTextLength}
+        </span>
       </div>
 
       {["answer1", "answer2", "answer3", "answer4", "answer5"].map((field, index) => (
@@ -168,9 +172,11 @@ export const AdminView = () => {
             name={field}
             value={formData[field as keyof PollFormInputs]}
             onChange={handleChange}
-            maxLength={16}
+            maxLength={pollOptionMaxTextLength}
           />
-          <span className="input-char-count">{formData[field as keyof PollFormInputs].length}/16</span>
+          <span className="input-char-count">
+            {formData[field as keyof PollFormInputs].length}/{pollOptionMaxTextLength}
+          </span>
         </div>
       ))}
 
