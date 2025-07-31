@@ -10,120 +10,35 @@ import { backendAPI } from "@/utils/backendAPI";
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
 import { SET_POLL } from "@/context/types";
 
-interface PollFormInputs {
-  question: string;
-  answer1: string;
-  answer2: string;
-  answer3: string;
-  answer4: string;
-  answer5: string;
-  displayMode: "percentage" | "count";
-}
-
 /*
   The AdminView component is where admins can set the poll question, options, and display mode
   (or reset the poll). It is displayed upon clicking the settings icon in the header.
 */
 export const AdminView = () => {
-  const dispatch = useContext(GlobalDispatchContext);
+  const dispatch = useContext(GlobalDispatchContext)!;
+  const { poll } = useContext(GlobalStateContext);
+
   const pollOptionMaxTextLength = 100;
   const pollQuestionMaxTextLength = 150;
+  const maxOptions = 10;
+
+  // state
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState<string[]>(["", ""]);
+  const [displayMode, setDisplayMode] = useState<"percentage" | "count">("percentage");
+
+  const [origQuestion, setOrigQuestion] = useState("");
+  const [origOptions, setOrigOptions] = useState<string[]>([]);
 
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [formData, setFormData] = useState<PollFormInputs>({
-    question: "",
-    answer1: "",
-    answer2: "",
-    answer3: "",
-    answer4: "",
-    answer5: "",
-    displayMode: "percentage",
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [modalType, setModalType] = useState<"save" | "reset" | null>(null);
-  const { poll } = useContext(GlobalStateContext);
+  const [modalType, setModalType] = useState<"crucialSave" | "reset" | "nonCrucialSave" | null>("nonCrucialSave");
 
-  function handleToggleShowConfirmationModal() {
-    setShowConfirmationModal(!showConfirmationModal);
-    if (showConfirmationModal) {
-      setPendingAction(null); // Reset pending action when modal is closed
-    }
-  }
-
-  // Updates the formData field matching the input/select’s name with its new value
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({ ...prevState, [name]: value }));
-  };
-
-  // This function will be called when the user clicks the "Save" button
-  const handleSubmitPoll = async () => {
-    setErrorMessage("");
-
-    // Validate that the question is not empty
-    if (formData.question.trim() === "") {
-      setErrorMessage("Poll question is required.");
-      return;
-    }
-
-    // Create an array of poll options from the formData
-    const options = [formData.answer1, formData.answer2, formData.answer3, formData.answer4, formData.answer5];
-
-    // Filter out any options that are empty or only whitespace
-    const validOptions = options.filter((option) => option.trim() !== "");
-
-    // Error if less than 2 options are provided
-    if (validOptions.length < 2) {
-      setErrorMessage("At least two options are required.");
-      return;
-    }
-
-    // If validation is successful, proceed with the API call
-    setIsSubmitting(true);
-
-    // Overrides the poll with a backend PUT request
-    backendAPI
-      .put("/poll", formData)
-      .then((res) => {
-        console.log("Poll updated successfully");
-        const poll = res.data.poll;
-        dispatch!({
-          type: SET_POLL,
-          payload: { poll },
-        });
-      })
-      .catch((error) => setErrorMessage(error?.response?.data?.message || error.message || "Error updating poll"))
-      .finally(() => setIsSubmitting(false));
-  };
-
-  // Resets the data object for the dropped Asset (including the current poll) using backend POST
-  const handleResetPoll = async () => {
-    setIsSubmitting(true);
-    setErrorMessage("");
-
-    backendAPI
-      .post("admin/reset")
-      .then(() => {
-        console.log("Poll reset successfully");
-      })
-      .catch((error) => setErrorMessage(error?.response?.data?.message || error.message || "Error resetting poll"))
-      .finally(() => setIsSubmitting(false));
-  };
-
-  // Get the confirmation modal for the Save button
-  const handleSaveClick = () => {
-    setPendingAction(() => handleSubmitPoll);
-    setModalType("save"); // using new generic modal
-    setShowConfirmationModal(true);
-  };
-
-  // Get the confirmation modal for the Reset button
-  const handleResetClick = () => {
-    setPendingAction(() => handleResetPoll);
-    setModalType("reset"); // using the same new generic modal
-    setShowConfirmationModal(true);
+  const handleToggleShowConfirmationModal = () => {
+    setShowConfirmationModal((v) => !v);
+    if (showConfirmationModal) setPendingAction(null);
   };
 
   useEffect(() => {
@@ -131,16 +46,110 @@ export const AdminView = () => {
     // pull the question + the answers array
     const { question, answers, displayMode } = poll;
 
-    setFormData({
-      question,
-      answer1: answers[0] || "",
-      answer2: answers[1] || "",
-      answer3: answers[2] || "",
-      answer4: answers[3] || "",
-      answer5: answers[4] || "",
-      displayMode: displayMode === "count" ? "count" : "percentage",
-    });
+    setQuestion(question);
+    setOptions(answers.length > 0 ? poll.answers : ["", ""]);
+    setDisplayMode(displayMode === "count" ? "count" : "percentage");
+
+    setOrigQuestion(poll.question);
+    setOrigOptions(poll.answers);
+
+    setModalType("nonCrucialSave");
   }, [poll]);
+
+  const validOptions = options.filter((o) => o.trim() !== "");
+  const isValid = question.trim() !== "" && validOptions.length >= 2;
+
+  // handlers
+  const addOption = () => {
+    if (options.length < maxOptions) {
+      setOptions((prev) => [...prev, ""]);
+    }
+  };
+
+  // detect edits for modal type changes
+  useEffect(() => {
+    const trimmedOpts = options.map((o) => o.trim());
+    const trimmedOrig = origOptions.map((o) => o.trim());
+
+    const questionChanged = question.trim() !== origQuestion.trim();
+    const optionsChanged =
+      trimmedOpts.length !== trimmedOrig.length || trimmedOpts.some((o, i) => o !== trimmedOrig[i]);
+
+    if (questionChanged || optionsChanged) {
+      setModalType("crucialSave");
+    } else {
+      setModalType("nonCrucialSave");
+    }
+  }, [question, options, origQuestion, origOptions]);
+
+  // This function will be called when the user clicks the yes in the modal
+  const handleSubmitPoll = async () => {
+    setIsSubmitting(true);
+    try {
+      const payload =
+        modalType === "crucialSave"
+          ? { question, answers: options, displayMode, crucial: true }
+          : { displayMode, crucial: false };
+      const res = await backendAPI.put("/poll", payload);
+      dispatch({
+        type: SET_POLL,
+        payload: { poll: res.data.poll },
+      });
+    } catch (err: any) {
+      setErrorMessage(err?.response?.data?.message || err.message || "Error updating poll");
+    } finally {
+      setIsSubmitting(false);
+      handleToggleShowConfirmationModal();
+    }
+  };
+
+  // Resets the data object for the dropped Asset (including the current poll) using backend POST
+  const handleResetPoll = async () => {
+    setIsSubmitting(true);
+    try {
+      await backendAPI.post("admin/reset");
+    } catch (err: any) {
+      setErrorMessage(err?.response?.data?.message || err.message || "Error resetting poll");
+    } finally {
+      setIsSubmitting(false);
+      handleToggleShowConfirmationModal();
+    }
+  };
+
+  // Get the confirmation modal for the Save button
+  const handleSaveClick = () => {
+    setErrorMessage("");
+    if (!isValid) {
+      setErrorMessage("Question is required and at least two options must be non‑empty.");
+      return;
+    }
+    setPendingAction(() => handleSubmitPoll);
+    handleToggleShowConfirmationModal();
+  };
+
+  // Get the confirmation modal for the Reset button
+  const handleResetClick = () => {
+    setPendingAction(() => handleResetPoll);
+    setModalType("reset");
+    handleToggleShowConfirmationModal();
+  };
+
+  const getModalTitle = () => {
+    switch (modalType) {
+      case "crucialSave":
+        return `Override poll?`;
+      case "nonCrucialSave":
+        return `Update poll?`;
+      case "reset":
+        return `Reset poll?`;
+    }
+    return `Override poll?`;
+  };
+
+  const getModalMessage = () => {
+    if (modalType === "nonCrucialSave") return "No data will be lost.";
+    return "Current poll data and results will be erased.";
+  };
 
   return (
     <div className="grid grid-flow-row gap-4 pb-20">
@@ -154,42 +163,59 @@ export const AdminView = () => {
           id="titleInput"
           className="input"
           name="question"
-          value={formData.question}
-          onChange={handleChange}
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
           maxLength={pollQuestionMaxTextLength}
         />
         <span className="input-char-count">
-          {formData.question.length}/{pollQuestionMaxTextLength}
+          {question.length}/{pollQuestionMaxTextLength}
         </span>
       </div>
 
-      {["answer1", "answer2", "answer3", "answer4", "answer5"].map((field, index) => (
-        <div key={index} className="input-group">
-          <label className="label">Option {index + 1}</label>
-          <input
-            id="titleInput"
-            className="input"
-            name={field}
-            value={formData[field as keyof PollFormInputs]}
-            onChange={handleChange}
-            maxLength={pollOptionMaxTextLength}
-          />
-          <span className="input-char-count">
-            {formData[field as keyof PollFormInputs].length}/{pollOptionMaxTextLength}
-          </span>
+      {/* poll options */}
+      <div className="space-y-3 mb-4">
+        {options.map((opt, i) => (
+          <div key={i} className="input-group">
+            <label className="label">Option {i + 1}</label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                className="input flex-grow"
+                value={opt}
+                onChange={(e) => {
+                  const copy = [...options];
+                  copy[i] = e.target.value;
+                  setOptions(copy);
+                }}
+                maxLength={pollOptionMaxTextLength}
+                placeholder={`Option ${i + 1}`}
+              />
+            </div>
+            <span className="input-char-count">
+              {opt.length}/{pollOptionMaxTextLength}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* add poll option */}
+      {options.length < maxOptions && (
+        <div className="mb-4 flex justify-center">
+          <button type="button" className="btn btn-icon" onClick={addOption}>
+            <img src="https://sdk-style.s3.amazonaws.com/icons/plus.svg" />
+          </button>
         </div>
-      ))}
+      )}
 
       <h4 className="pt-4">Results Display</h4>
-      {/* Using flex and gap to separate the radio buttons */}
       <div className="flex gap-4 pb-8">
         <label>
           <input
             type="radio"
             name="displayMode"
             value="percentage"
-            checked={formData.displayMode === "percentage"}
-            onChange={handleChange}
+            checked={displayMode === "percentage"}
+            onChange={() => setDisplayMode("percentage")}
             className="mr-1"
           />
           Percentage
@@ -199,8 +225,8 @@ export const AdminView = () => {
             type="radio"
             name="displayMode"
             value="count"
-            checked={formData.displayMode === "count"}
-            onChange={handleChange}
+            checked={displayMode === "count"}
+            onChange={() => setDisplayMode("count")}
             className="mr-1"
           />
           Number of Votes
@@ -220,12 +246,8 @@ export const AdminView = () => {
 
       {showConfirmationModal && (
         <ConfirmationModal
-          title={modalType === "save" ? "Override Poll?" : "Reset Poll?"}
-          message={
-            modalType === "save"
-              ? "Current poll data and results will be erased."
-              : "Current poll data and results will be erased."
-          }
+          title={getModalTitle()}
+          message={getModalMessage()}
           handleToggleShowConfirmationModal={handleToggleShowConfirmationModal}
           onConfirm={() => {
             if (pendingAction) pendingAction();
