@@ -202,7 +202,7 @@ export const AdminView = () => {
       {options.length < maxOptions && (
         <div className="mb-4 flex justify-center">
           <button type="button" className="btn btn-icon" onClick={addOption}>
-            <img src="https://sdk-style.s3.amazonaws.com/icons/plus.svg" />
+            <img src="https://sdk-style.s3.amazonaws.com/icons/add.svg" />
           </button>
         </div>
       )}

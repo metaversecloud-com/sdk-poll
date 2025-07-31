@@ -35,9 +35,7 @@ export const handleUpdatePoll = async (req: Request, res: Response) => {
       // validate
       const validAnswers = (answers || []).filter((a) => a.trim() !== "");
       if (!question?.trim() || validAnswers.length < 2) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Question required and at least two answers." });
+        return res.status(400).json({ success: false, message: "Question required and at least two answers." });
       }
 
       // build options where each looks like: "0": { votes: 0 }, etc..
@@ -51,10 +49,10 @@ export const handleUpdatePoll = async (req: Request, res: Response) => {
         answers: validAnswers,
         displayMode,
         options,
-        results: {},       // reset results!!!!!
+        results: {}, // reset results!!!!!
       };
     } else {
-      // non-crucial --- only update displayMode
+      // non-crucial so only update display mode
       updatePayload = {
         ...existing,
         displayMode,
