@@ -17,12 +17,10 @@ const Home = () => {
 
   const dispatch = useContext(GlobalDispatchContext);
   const { poll, profileId, visitor } = useContext(GlobalStateContext);
-  console.log(poll, " lalala");
   const isAdmin = visitor?.isAdmin || false;
 
   // Initial fetch of poll data
   useEffect(() => {
-    console.log(" lalala");
     fetchPollData();
   }, []);
 
@@ -43,7 +41,6 @@ const Home = () => {
           type: SET_POLL,
           payload: { poll },
         });
-        console.log("poll: ", poll);
       })
       .catch((error) => setErrorMessage(dispatch, error))
       .finally(() => setIsLoading(false));
