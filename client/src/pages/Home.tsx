@@ -108,10 +108,11 @@ const Home = () => {
                 key={i}
                 disabled={areButtonsDisabled}
                 onClick={() => handleVote(i)}
-                className={isSelected ? "btn" : "btn btn-outline"}
+                className={`${isSelected ? "btn" : "btn btn-outline"} inline-block w-auto max-w-none break-words`}
+                style={{ height: "auto", maxHeight: "none" }}
               >
-                <div className="flex flex-auto items-stretch">
-                  <div className="grow text-left">{ans}</div>
+                <div className="flex items-center">
+                  <div className="text-left mr-2">{ans}</div>
                   <div className={isSelected ? "text-sm text-white" : "p2"}>
                     {isAdmin || selectedOption !== null ? voteText : ""}
                   </div>
