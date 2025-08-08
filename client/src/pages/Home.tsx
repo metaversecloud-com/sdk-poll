@@ -74,9 +74,9 @@ const Home = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading}>
+    <PageContainer isLoading={isLoading} >
       {poll && poll.question ? (
-        <div className="grid gap-4">
+        <div className="grid gap-4" >
           <h4 className="mb-4">{poll.question}</h4>
 
           {/* Display all the poll options dynamically as buttons */}
