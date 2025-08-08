@@ -162,7 +162,7 @@ export const AdminView = () => {
   };
 
   return (
-    <div className="grid grid-flow-row space-y-4 pb-20">
+    <div className="mb-20 grid gap-4">
       <h3>Create or Update Poll</h3>
 
       {errorMessage && <p className="p3 py-4 text-center text-error">{errorMessage}</p>}
@@ -186,39 +186,38 @@ export const AdminView = () => {
       <div className="space-y-3 mb-4">
 
         {options.map((opt, i) => (
-          <div key={i} className="input-group" >
-            <label className="label">Option {i + 1}</label>
+          <div className="flex">
+            <div key={i} className="input-group grow" >
+              <label className="label">Option {i + 1}</label>
 
-            <div className="flex items-center space-x-2" >
-              <input
-                type="text"
-                className="input flex-grow"
-                value={opt}
-                onChange={(e) => {
-                  const copy = [...options];
-                  copy[i] = e.target.value;
-                  setOptions(copy);
-                }}
-                maxLength={pollOptionMaxTextLength}
-                placeholder={`Option ${i + 1}`}
-              />
+                <input
+                  type="text"
+                  className="input"
+                  value={opt}
+                  onChange={(e) => {
+                    const copy = [...options];
+                    copy[i] = e.target.value;
+                    setOptions(copy);
+                  }}
+                  maxLength={pollOptionMaxTextLength}
+                  placeholder={`Option ${i + 1}`}
+                />
 
-              {options.length > minOptions && (
-                <button
-                  type="button"
-                  className="p-2"
-                  onClick={() => removeOption(i)}
-                  style={{ flexShrink: 0 }}
-                >
-                  <img src="https://sdk-style.s3.amazonaws.com/icons/delete.svg" alt="" />
-                </button>
-              )}
+                <span className="input-char-count">
+                  {opt.length}/{pollOptionMaxTextLength}
+                </span>
             </div>
 
-            {/* overlayed like your question field */}
-            <span className="input-char-count -translate-x-10">
-              {opt.length}/{pollOptionMaxTextLength}
-            </span>
+            {options.length > minOptions && (
+              <button
+                type="button"
+                className="p-2 mt-5"
+                onClick={() => removeOption(i)}
+                style={{ flexShrink: 0 }}
+              >
+                <img src="https://sdk-style.s3.amazonaws.com/icons/delete.svg" alt="" />
+              </button>
+            )}
           </div>
         ))}
       </div>
