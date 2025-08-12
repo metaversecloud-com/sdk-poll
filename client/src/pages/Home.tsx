@@ -74,9 +74,9 @@ const Home = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading}>
+    <PageContainer isLoading={isLoading} >
       {poll && poll.question ? (
-        <div className="grid gap-4">
+        <div className="grid gap-4" >
           <h4 className="mb-4">{poll.question}</h4>
 
           {/* Display all the poll options dynamically as buttons */}
@@ -109,11 +109,11 @@ const Home = () => {
                 disabled={areButtonsDisabled}
                 onClick={() => handleVote(i)}
                 className={`${isSelected ? "btn" : "btn btn-outline"} inline-block w-auto max-w-none break-words`}
-                style={{ height: "auto", maxHeight: "none" }}
+                style={{ height: "auto", maxHeight: "none", justifyContent: "space-between"}}
               >
-                <div className="flex items-center">
+                <div className="flex items-center" style={{justifyContent: "space-between", width: "100%"}}>
                   <div className="text-left mr-2">{ans}</div>
-                  <div className={isSelected ? "text-sm text-white" : "p2"}>
+                  <div className={isSelected ? "text-sm text-white whitespace-nowrap" : "p2 whitespace-nowrap"} style={{ textAlign: "center" }}>
                     {isAdmin || selectedOption !== null ? voteText : ""}
                   </div>
                 </div>

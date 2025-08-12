@@ -21,6 +21,7 @@ export const AdminView = () => {
   const pollOptionMaxTextLength = 100;
   const pollQuestionMaxTextLength = 150;
   const maxOptions = 10;
+  const minOptions = 2;
 
   // state
   const [question, setQuestion] = useState("");
@@ -57,7 +58,7 @@ export const AdminView = () => {
   }, [poll]);
 
   const validOptions = options.filter((o) => o.trim() !== "");
-  const isValid = question.trim() !== "" && validOptions.length >= 2;
+  const isValid = question.trim() !== "" && validOptions.length >= minOptions;
 
   // handlers
   const addOption = () => {
@@ -65,6 +66,15 @@ export const AdminView = () => {
       setOptions((prev) => [...prev, ""]);
     }
   };
+  const removeOption = (i: number) => {
+    if (options.length > minOptions) { // 2 is min options
+      setOptions(prev => {
+        const copy = [...prev];
+        copy.splice(i, 1);
+        return copy; 
+      });
+    }
+  }
 
   // detect edits for modal type changes
   useEffect(() => {
@@ -152,7 +162,7 @@ export const AdminView = () => {
   };
 
   return (
-    <div className="grid grid-flow-row gap-4 pb-20">
+    <div className="mb-20 grid gap-4">
       <h3>Create or Update Poll</h3>
 
       {errorMessage && <p className="p3 py-4 text-center text-error">{errorMessage}</p>}
@@ -171,32 +181,47 @@ export const AdminView = () => {
           {question.length}/{pollQuestionMaxTextLength}
         </span>
       </div>
-
+      
       {/* poll options */}
       <div className="space-y-3 mb-4">
+
         {options.map((opt, i) => (
-          <div key={i} className="input-group">
-            <label className="label">Option {i + 1}</label>
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                className="input flex-grow"
-                value={opt}
-                onChange={(e) => {
-                  const copy = [...options];
-                  copy[i] = e.target.value;
-                  setOptions(copy);
-                }}
-                maxLength={pollOptionMaxTextLength}
-                placeholder={`Option ${i + 1}`}
-              />
+          <div className="flex">
+            <div key={i} className="input-group grow" >
+              <label className="label">Option {i + 1}</label>
+
+                <input
+                  type="text"
+                  className="input"
+                  value={opt}
+                  onChange={(e) => {
+                    const copy = [...options];
+                    copy[i] = e.target.value;
+                    setOptions(copy);
+                  }}
+                  maxLength={pollOptionMaxTextLength}
+                  placeholder={`Option ${i + 1}`}
+                />
+
+                <span className="input-char-count">
+                  {opt.length}/{pollOptionMaxTextLength}
+                </span>
             </div>
-            <span className="input-char-count">
-              {opt.length}/{pollOptionMaxTextLength}
-            </span>
+
+            {options.length > minOptions && (
+              <button
+                type="button"
+                className="p-2 mt-5"
+                onClick={() => removeOption(i)}
+                style={{ flexShrink: 0 }}
+              >
+                <img src="https://sdk-style.s3.amazonaws.com/icons/delete.svg" alt="" />
+              </button>
+            )}
           </div>
         ))}
       </div>
+
 
       {/* add poll option */}
       {options.length < maxOptions && (
@@ -208,7 +233,7 @@ export const AdminView = () => {
       )}
 
       <h4 className="pt-4">Results Display</h4>
-      <div className="flex gap-4 pb-8">
+      <div className="flex space-x-4 pb-8">
         <label>
           <input
             type="radio"
