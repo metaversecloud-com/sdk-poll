@@ -23,9 +23,96 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
-          token: ${{ secrets.PAT }}  
+          token: ${{ secrets.PAT }}
+
+      - name: Check if user is authorized
+        id: auth_check
+        run: |
+          merged_by="${{ github.event.pull_request.merged_by.login }}"
+          echo "PR was merged by: $merged_by"
+                  
+          # Get authorized users from CODEOWNERS file
+          authorized_users=()
+                  
+          # Read CODEOWNERS file if it exists
+          if [[ -f ".github/CODEOWNERS" ]]; then
+            echo "📋 Reading CODEOWNERS file..."
+            # Extract usernames from CODEOWNERS (remove @ prefix)
+            codeowners=$(grep -v '^#' .github/CODEOWNERS | grep -o '@[a-zA-Z0-9_-]*' | sed 's/@//' | sort -u)
+            for user in $codeowners; do
+              authorized_users+=("$user")
+              echo "  - CODEOWNER: $user"
+            done
+          else
+            echo "⚠️  No CODEOWNERS file found"
+          fi
+                  
+          # Get repository collaborators with admin/maintain permissions using GitHub API
+          echo "🔍 Checking repository permissions..."
+                  
+          # Check if user has admin or maintain permissions
+          user_permission=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/collaborators/$merged_by/permission" | \
+            jq -r '.permission // "none"')
+                  
+          echo "User $merged_by has permission level: $user_permission"
+                  
+          # Check if user is authorized
+          is_authorized=false
+                  
+          # Check if user is in CODEOWNERS
+          for user in "${authorized_users[@]}"; do
+            if [[ "$user" == "$merged_by" ]]; then
+              is_authorized=true
+              echo "✅ User $merged_by is authorized via CODEOWNERS"
+              break
+            fi
+          done
+                  
+          # Check if user has admin or maintain permissions
+          if [[ "$user_permission" == "admin" || "$user_permission" == "maintain" ]]; then
+            is_authorized=true
+            echo "✅ User $merged_by is authorized via repository permissions ($user_permission)"
+          fi
+                  
+          # Check if user is organization owner (for metaversecloud-com org)
+          org_response=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/orgs/metaversecloud-com/members/$merged_by" \
+            -w "%{http_code}")
+                  
+          # Extract HTTP status code from the response
+          http_code=${org_response: -3}
+                  
+          if [[ "$http_code" == "200" ]]; then
+            # Check if user is an owner
+            owner_status=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/orgs/metaversecloud-com/memberships/$merged_by" | \
+              jq -r '.role // "none"')
+                    
+            if [[ "$owner_status" == "admin" ]]; then
+              is_authorized=true
+              echo "✅ User $merged_by is authorized as organization owner"
+            fi
+          fi
+                  
+          echo "is_authorized=$is_authorized" >> $GITHUB_OUTPUT
+                  
+          if [[ "$is_authorized" == "false" ]]; then
+            echo "❌ User $merged_by is not authorized to trigger releases"
+            echo "💡 Authorized users include:"
+            echo "  - CODEOWNERS: ${authorized_users[*]}"
+            echo "  - Repository admins and maintainers"
+            echo "  - Organization owners"
+            exit 0
+          else
+            echo "🎉 User $merged_by is authorized to trigger releases"
+          fi
 
       - name: Check for release labels and determine version bumps
+        if: steps.auth_check.outputs.is_authorized == 'true'
         id: check
         run: |
           labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
@@ -65,13 +152,13 @@ jobs:
           echo "Has major: $has_major, minor: $has_minor, patch: $has_patch"
 
       - name: Setup Node.js
-        if: steps.check.outputs.should_release == 'true'
+        if: steps.auth_check.outputs.is_authorized == 'true' && steps.check.outputs.should_release == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20.10
 
       - name: Calculate new version with cumulative bumps
-        if: steps.check.outputs.should_release == 'true'
+        if: steps.auth_check.outputs.is_authorized == 'true' && steps.check.outputs.should_release == 'true'
         id: version
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -125,7 +212,7 @@ jobs:
           echo "New version will be: v$new_version"
 
       - name: Create Release
-        if: steps.check.outputs.should_release == 'true'
+        if: steps.auth_check.outputs.is_authorized == 'true' && steps.check.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.PAT }}  # Use PAT to trigger other workflows
