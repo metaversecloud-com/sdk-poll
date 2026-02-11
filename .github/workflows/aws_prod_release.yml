@@ -50,7 +50,7 @@ jobs:
           cache: 'npm'
       - run: git config --global user.email devops@topia.io
       - run: git config --global user.name Devops
-      - run: npm version --workspaces --include-workspace-root true ${{ github.event.release.tag_name }}
+      - run: npm version --no-git-tag-version --workspaces --include-workspace-root true ${{ github.event.release.tag_name }}
       - run: npm i
       - run: CI=false npm run build
                 
