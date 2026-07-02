@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poll0
+  labels:
+    app.kubernetes.io/name: poll0
+spec:
+  # Replicas are managed by the per-env KEDA HTTPScaledObject (dev: scale-to-zero
+  # 0<->1 via the KEDA HTTP add-on interceptor).
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: poll0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: poll0
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: poll0
+          image: poll0 # placeholder; overlay `images:` maps it to the real ref
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability.svc.cluster.local:4318
+            - name: OTEL_SERVICE_NAME
+              value: poll0
+          envFrom:
+            # Per-service config + secret (own INTERACTIVE_KEY/SECRET). Seeded
+            # out-of-band by the Terraform-templated CI job (NOT Argo-managed).
+            - configMapRef:
+                name: poll0-config
+            - secretRef:
+                name: poll0-secrets
+          livenessProbe:
+            httpGet:
+              path: /api/system/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/system/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
