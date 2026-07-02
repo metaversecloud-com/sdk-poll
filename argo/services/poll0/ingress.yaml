@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: poll0
   annotations:
     # All SDK apps in the cluster share ONE ALB via this group (flat ALB cost).
-    alb.ingress.kubernetes.io/group.name: sdk-apps
+    alb.ingress.kubernetes.io/group.name: topia-dev
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'

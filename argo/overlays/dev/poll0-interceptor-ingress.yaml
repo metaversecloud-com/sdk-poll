@@ -7,7 +7,7 @@ metadata:
   name: poll0-interceptor
   namespace: keda
   annotations:
-    alb.ingress.kubernetes.io/group.name: sdk-apps
+    alb.ingress.kubernetes.io/group.name: topia-dev
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
