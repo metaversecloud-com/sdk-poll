@@ -26,4 +26,4 @@ patches:
 images:
   - name: poll0
     newName: 368076259134.dkr.ecr.us-east-1.amazonaws.com/sdk-example
-    digest: sha256:88bf85b834f9612d636e624f3a1efcff0cf52616d71afebe86d3cff921deb985
+    digest: sha256:527974d49fa9f1b629e14c068f21276116e28e40c8abeaec6a11ab62856dd110
