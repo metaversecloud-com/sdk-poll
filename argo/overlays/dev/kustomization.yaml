@@ -27,3 +27,4 @@ images:
   - name: poll0
     newName: 368076259134.dkr.ecr.us-east-1.amazonaws.com/sdk-example
     digest: sha256:527974d49fa9f1b629e14c068f21276116e28e40c8abeaec6a11ab62856dd110
+    newTag: sdk-poll
