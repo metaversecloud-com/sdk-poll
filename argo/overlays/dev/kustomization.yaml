@@ -8,7 +8,6 @@ resources:
   - poll0-config.yaml
   - poll0-sealedsecret.yaml
   - poll0-httpscaledobject.yaml
-  - poll0-interceptor-ingress.yaml
 patches:
   # Drop the direct ALB Ingress: in dev the app is fronted through the KEDA
   # interceptor so a scaled-to-zero Deployment is woken by the first request.
