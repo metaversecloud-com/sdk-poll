@@ -165,3 +165,5 @@ The dev server proxies the client at `localhost:5173` to the API server at `PORT
 - [SDK Developer docs](https://metaversecloud-com.github.io/mc-sdk-js/index.html)
 - View it in action: [Dev](https://topia.io/poll-dev), [Prod](https://topia.io/poll-prod)
 - [Notion One Pager](https://app.notion.com/p/topiaio/Poll-1d040e35bdb980ab8fb1f826cadc14c1?v=71f6c3828d3b4f33960326f9bde24781)
+
+<!-- deploy pipeline check 2026-09-28: manifests in sdk-gitops, Image Updater writes there -->
