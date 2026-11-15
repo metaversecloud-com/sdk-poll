@@ -89,12 +89,12 @@ test("a returning player sees their earlier vote and the results", async ({ page
 });
 
 test("Refresh picks up other players' votes", async ({ page, world }) => {
-  await world.seed({ assetData: poll({ displayMode: "count" }), players: { 43: { profileId: "profile-other" } } });
+  await world.seed({ assetData: poll({ displayMode: "count" }), otherVisitors: { 43: { profileId: "profile-other" } } });
   await page.goto(world.url("/"));
   await option(page, "Spring").click();
   await expect(option(page, "Spring")).toHaveText("Spring1 votes");
 
-  const other = await page.request.post(world.api("/vote", world.as(43, "profile-other")), {
+  const other = await page.request.post(world.api("/vote", world.as(43)), {
     data: { optionId: 0, profileId: "profile-other" },
   });
   expect(other.ok()).toBe(true);
@@ -104,11 +104,11 @@ test("Refresh picks up other players' votes", async ({ page, world }) => {
 });
 
 test("two players voting in turn are both counted", async ({ browser, world }) => {
-  await world.seed({ assetData: poll({ displayMode: "count" }), players: { 43: { profileId: "profile-other" } } });
+  await world.seed({ assetData: poll({ displayMode: "count" }), otherVisitors: { 43: { profileId: "profile-other" } } });
   const first = await browser.newPage();
   const second = await browser.newPage();
   await first.goto(world.url("/"));
-  await second.goto(world.url("/", world.as(43, "profile-other")));
+  await second.goto(world.url("/", world.as(43)));
 
   await option(first, "Winter").click();
   await expect(option(first, "Winter")).toHaveText("Winter1 votes");
